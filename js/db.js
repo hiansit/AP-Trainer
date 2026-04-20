@@ -341,7 +341,8 @@ const DB = (() => {
                     userId,
                     preferredLevel: 1,
                     questionsPerSet: 10,
-                    showKeyLabels: true
+                    showKeyLabels: true,
+                    language: null
                 });
             };
             req.onerror = () => reject(req.error);

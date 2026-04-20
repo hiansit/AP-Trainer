@@ -16,9 +16,61 @@ const App = (() => {
     // DOM要素キャッシュ
     const $ = (id) => document.getElementById(id);
 
-    // ==================== 初期化 ====================
+    // ==================== 初期化 と i18n ====================
+
+    /**
+     * DOM内の data-i18n 属性を走査し、翻訳を適用する
+     */
+    function updateDOMTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const paramStr = el.getAttribute('data-i18n-params');
+            let params = {};
+            if (paramStr) {
+                try { params = JSON.parse(paramStr); } catch (e) {}
+            }
+            el.innerHTML = I18n.t(key, params);
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            el.placeholder = I18n.t(key);
+        });
+
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.getAttribute('data-i18n-title');
+            el.title = I18n.t(key);
+        });
+
+        // 翻訳後にフッターなどの動的テキストも再更新する
+        updateFooterHints();
+        updateOctaveDisplay(Keyboard.getOctave());
+    }
+
+    async function changeLanguage(lang) {
+        I18n.setLanguage(lang);
+        
+        // セレクトボックスの同期
+        const welSel = $('welcome-lang');
+        const setSel = $('settings-lang');
+        if (welSel) welSel.value = lang;
+        if (setSel) setSel.value = lang;
+
+        updateDOMTranslations();
+
+        if (currentUser && appSettings) {
+            appSettings.language = lang;
+            await DB.saveSettings(appSettings);
+        }
+    }
 
     async function init() {
+        // I18nの初期設定（DBがない場合のフォールバック）
+        const browserLang = I18n.detectBrowserLanguage();
+        I18n.setLanguage(browserLang);
+        if ($('welcome-lang')) $('welcome-lang').value = browserLang;
+        updateDOMTranslations();
+
         // DB初期化
         await DB.open();
 
@@ -56,13 +108,13 @@ const App = (() => {
     async function ensureAudio() {
         if (audioInitialized) return;
         $('loading-overlay')?.classList.remove('hidden');
-        $('loading-text').textContent = '🎹 ピアノサンプルを読み込み中...';
+        $('loading-text').textContent = I18n.t('common.audioInit');
         try {
             await AudioEngine.init();
             audioInitialized = true;
         } catch (e) {
             console.error('音声初期化失敗:', e);
-            showToast('音声の初期化に失敗しました', 'error');
+            showToast(I18n.t('common.audioFail'), 'error');
         }
         $('loading-overlay')?.classList.add('hidden');
     }
@@ -106,6 +158,13 @@ const App = (() => {
     function setupWelcome() {
         const form = $('welcome-form');
         const input = $('welcome-name-input');
+        const langSelect = $('welcome-lang');
+
+        if (langSelect) {
+            langSelect.addEventListener('change', (e) => {
+                changeLanguage(e.target.value);
+            });
+        }
 
         form?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -116,12 +175,12 @@ const App = (() => {
                 const userId = await DB.createUser(name);
                 await selectUser(userId);
                 showScreen('home');
-                showToast(`ようこそ、${name}さん！`, 'success');
+                showToast(I18n.t('welcome.success', { name }), 'success');
             } catch (err) {
                 if (err.name === 'ConstraintError') {
-                    showToast('その名前は既に使用されています', 'error');
+                    showToast(I18n.t('welcome.nameExists'), 'error');
                 } else {
-                    showToast('ユーザーの作成に失敗しました', 'error');
+                    showToast(I18n.t('welcome.addFail'), 'error');
                 }
             }
         });
@@ -186,19 +245,19 @@ const App = (() => {
         // トレーニング開始
         Training.setCallbacks({
             onQuestionStart: (num, total) => {
-                $('training-message').textContent = '🎧 聴いてください…';
+                $('training-message').textContent = I18n.t('training.listen');
                 $('training-message').className = 'training-message listening';
                 updateTrainingProgress(num, total);
                 setTimeout(() => {
-                    $('training-message').textContent = '🎹 どの音ですか？';
+                    $('training-message').textContent = I18n.t('training.answer');
                     $('training-message').className = 'training-message answering';
                 }, 1200);
             },
             onCorrect: (note, streak) => {
                 Piano.highlightKey(note, 'correct', 1200);
                 $('training-message').textContent = streak >= 3
-                    ? `🔥 ${streak}連続正解！ すばらしい！`
-                    : '✅ 正解！';
+                    ? I18n.t('training.correctStreak', { n: streak })
+                    : I18n.t('training.correct');
                 $('training-message').className = 'training-message correct';
                 updateTrainingScore();
                 setTimeout(() => Training.nextQuestion(), 1300);
@@ -207,11 +266,13 @@ const App = (() => {
                 Piano.highlightKey(selected, 'wrong', 2000);
                 Piano.highlightKey(target, 'correct', 2000);
 
-                const direction = semitones > 0 ? '高い' : '低い';
                 const abs = Math.abs(semitones);
-                let msg = `❌ 不正解… 正解は ${target}`;
-                if (abs === 1) msg += ` (半音${direction})`;
-                else msg += ` (${abs}半音${direction})`;
+                let msg = I18n.t('training.wrong', { target });
+                if (semitones > 0) {
+                    msg += abs === 1 ? I18n.t('training.wrongDetailHigher1') : I18n.t('training.wrongDetailHigher', { n: abs });
+                } else {
+                    msg += abs === 1 ? I18n.t('training.wrongDetailLower1') : I18n.t('training.wrongDetailLower', { n: abs });
+                }
 
                 $('training-message').textContent = msg;
                 $('training-message').className = 'training-message wrong';
@@ -286,15 +347,15 @@ const App = (() => {
         $('result-accuracy').textContent = `${result.accuracy}%`;
 
         // 評価メッセージ
-        let grade = '';
+        let gradeKey = '';
         let gradeClass = '';
-        if (result.accuracy === 100) { grade = '🏆 パーフェクト！'; gradeClass = 'perfect'; }
-        else if (result.accuracy >= 80) { grade = '🎉 すばらしい！'; gradeClass = 'great'; }
-        else if (result.accuracy >= 60) { grade = '👍 いい感じ！'; gradeClass = 'good'; }
-        else if (result.accuracy >= 40) { grade = '💪 もう少し！'; gradeClass = 'fair'; }
-        else { grade = '🎯 練習あるのみ！'; gradeClass = 'practice'; }
+        if (result.accuracy === 100) { gradeKey = 'result.perfect'; gradeClass = 'perfect'; }
+        else if (result.accuracy >= 80) { gradeKey = 'result.great'; gradeClass = 'great'; }
+        else if (result.accuracy >= 60) { gradeKey = 'result.good'; gradeClass = 'good'; }
+        else if (result.accuracy >= 40) { gradeKey = 'result.fair'; gradeClass = 'fair'; }
+        else { gradeKey = 'result.practice'; gradeClass = 'practice'; }
 
-        $('result-grade').textContent = grade;
+        $('result-grade').textContent = I18n.t(gradeKey);
         $('result-grade').className = `result-grade ${gradeClass}`;
 
         // ストリーク
@@ -339,8 +400,8 @@ const App = (() => {
             item.innerHTML = `
                 <span class="detail-num">#${i + 1}</span>
                 <span class="detail-icon">${d.correct ? '✅' : '❌'}</span>
-                <span class="detail-target">出題: ${d.target}</span>
-                ${!d.correct ? `<span class="detail-selected">回答: ${d.selected}</span>` : ''}
+                <span class="detail-target">${I18n.t('result.target', { n: d.target })}</span>
+                ${!d.correct ? `<span class="detail-selected">${I18n.t('result.selected', { n: d.selected })}</span>` : ''}
             `;
             list.appendChild(item);
         });
@@ -381,10 +442,12 @@ const App = (() => {
                 const data = stats.byLevel[lv];
                 const card = document.createElement('div');
                 card.className = 'level-stat-card glass-panel';
+                const accuracyTxt = data ? data.accuracy + '%' : '—';
+                const sessionsTxt = data ? data.sessions + I18n.t('history.times') : I18n.t('history.untried');
                 card.innerHTML = `
                     <div class="level-stat-label">Level ${lv}</div>
-                    <div class="level-stat-value">${data ? data.accuracy + '%' : '—'}</div>
-                    <div class="level-stat-sub">${data ? data.sessions + '回' : '未挑戦'}</div>
+                    <div class="level-stat-value">${accuracyTxt}</div>
+                    <div class="level-stat-sub">${sessionsTxt}</div>
                 `;
                 byLevelEl.appendChild(card);
             });
@@ -398,13 +461,16 @@ const App = (() => {
         if (listEl) {
             listEl.innerHTML = '';
             if (sessions.length === 0) {
-                listEl.innerHTML = '<p class="empty-message">まだ記録がありません</p>';
+                listEl.innerHTML = `<p class="empty-message">${I18n.t('history.emptyRecord')}</p>`;
             } else {
                 sessions.forEach(s => {
                     const date = new Date(s.timestamp);
                     const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
                     const row = document.createElement('div');
                     row.className = 'history-row';
+                    
+                    const abortedBadge = s.aborted ? `<span class="history-badge aborted">${I18n.t('result.aborted')}</span>` : '';
+                    
                     row.innerHTML = `
                         <label class="history-row-checkbox">
                             <input type="checkbox" value="${s.id}">
@@ -414,11 +480,11 @@ const App = (() => {
                             <span class="history-level">Lv.${s.level}</span>
                             <span class="history-score">${s.score}/${s.total}</span>
                             <span class="history-accuracy ${s.accuracy >= 80 ? 'high' : s.accuracy >= 50 ? 'mid' : 'low'}">${s.accuracy}%</span>
-                            ${s.aborted ? '<span class="history-badge aborted">中断</span>' : ''}
+                            ${abortedBadge}
                         </div>
                         <div class="history-row-actions">
-                            <button class="icon-btn-small btn-dl-single" title="ダウンロード">📥</button>
-                            <button class="icon-btn-small danger btn-del-single" title="削除">🗑</button>
+                            <button class="icon-btn-small btn-dl-single" title="${I18n.t('history.dlBtnTitle')}">📥</button>
+                            <button class="icon-btn-small danger btn-del-single" title="${I18n.t('history.delBtnTitle')}">🗑</button>
                         </div>
                     `;
                     listEl.appendChild(row);
@@ -433,13 +499,13 @@ const App = (() => {
 
                     row.querySelector('.btn-dl-single').addEventListener('click', () => {
                         exportSessionsToJson([s]);
-                        showToast('1件をダウンロードしました', 'success');
+                        showToast(I18n.t('history.dlSuccess1'), 'success');
                     });
 
                     row.querySelector('.btn-del-single').addEventListener('click', async () => {
-                        if (confirm('このセッションを削除しますか？')) {
+                        if (confirm(I18n.t('history.delSessionConfirm'))) {
                             await DB.deleteSession(s.id);
-                            showToast('セッションを削除しました', 'success');
+                            showToast(I18n.t('history.delSessionSuccess'), 'success');
                             initHistoryScreen();
                         }
                     });
@@ -463,7 +529,7 @@ const App = (() => {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '14px Outfit, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('データがまだありません', canvas.width / 2, canvas.height / 2);
+                ctx.fillText(I18n.t('history.noData'), canvas.width / 2, canvas.height / 2);
             }
             return;
         }
@@ -562,9 +628,9 @@ const App = (() => {
 
         $('btn-clear-history')?.addEventListener('click', async () => {
             if (!currentUser) return;
-            if (!confirm('全ての学習履歴を削除しますか？')) return;
+            if (!confirm(I18n.t('history.delAllConfirm'))) return;
             await DB.deleteSessionsByUser(currentUser.id);
-            showToast('履歴を削除しました', 'success');
+            showToast(I18n.t('history.delAllSuccess'), 'success');
             initHistoryScreen();
         });
 
@@ -586,14 +652,14 @@ const App = (() => {
             const sessions = await DB.getSessionsByUser(currentUser.id, 9999);
             const targets = sessions.filter(s => ids.includes(s.id));
             exportSessionsToJson(targets);
-            showToast(`${targets.length}件ダウンロードしました`, 'success');
+            showToast(I18n.t('history.dlSuccessN', { n: targets.length }), 'success');
         });
 
         $('btn-delete-selected')?.addEventListener('click', async () => {
             if (selectedHistoryIds.size === 0) return;
-            if (!confirm(`選択した ${selectedHistoryIds.size} 件のセッションを削除しますか？`)) return;
+            if (!confirm(I18n.t('history.delMultiConfirm', { n: selectedHistoryIds.size }))) return;
             await DB.deleteSessions(Array.from(selectedHistoryIds));
-            showToast('選択したセッションを削除しました', 'success');
+            showToast(I18n.t('history.delMultiSuccess'), 'success');
             initHistoryScreen();
         });
     }
@@ -605,7 +671,7 @@ const App = (() => {
         
         if (count > 0) {
             if (countSpan) {
-                countSpan.textContent = `${count}件選択`;
+                countSpan.textContent = I18n.t('history.nSelected', { n: count });
                 countSpan.classList.remove('hidden');
             }
             $('btn-download-selected').disabled = false;
@@ -647,6 +713,8 @@ const App = (() => {
         $('settings-level').value = appSettings.preferredLevel || 1;
         $('settings-questions').value = appSettings.questionsPerSet || 10;
         $('settings-labels').checked = appSettings.showKeyLabels !== false;
+        
+        if ($('settings-lang')) $('settings-lang').value = I18n.getLanguage();
 
         // ユーザー一覧を読み込む
         loadUserList();
@@ -661,12 +729,15 @@ const App = (() => {
         users.forEach(user => {
             const item = document.createElement('div');
             item.className = `user-item ${currentUser && currentUser.id === user.id ? 'active' : ''}`;
+            const badge = currentUser && currentUser.id === user.id ? `<span class="user-badge">${I18n.t('settings.inUse')}</span>` : '';
+            const btnDisable = currentUser && currentUser.id === user.id ? 'disabled' : '';
+            
             item.innerHTML = `
                 <span class="user-icon">👤</span>
                 <span class="user-name">${user.name}</span>
-                ${currentUser && currentUser.id === user.id ? '<span class="user-badge">使用中</span>' : ''}
-                <button class="user-switch-btn" data-user-id="${user.id}" ${currentUser && currentUser.id === user.id ? 'disabled' : ''}>切替</button>
-                <button class="user-delete-btn" data-user-id="${user.id}" title="削除">✕</button>
+                ${badge}
+                <button class="user-switch-btn" data-user-id="${user.id}" ${btnDisable}>${I18n.t('settings.switchBtn')}</button>
+                <button class="user-delete-btn" data-user-id="${user.id}" title="${I18n.t('settings.delBtnHover')}">✕</button>
             `;
             listEl.appendChild(item);
         });
@@ -677,7 +748,7 @@ const App = (() => {
                 const userId = parseInt(btn.dataset.userId);
                 await selectUser(userId);
                 initSettingsScreen();
-                showToast(`${currentUser.name} に切替えました`, 'success');
+                showToast(I18n.t('settings.switchSuccess', { name: currentUser.name }), 'success');
             });
         });
 
@@ -685,13 +756,13 @@ const App = (() => {
             btn.addEventListener('click', async () => {
                 const userId = parseInt(btn.dataset.userId);
                 if (currentUser && currentUser.id === userId) {
-                    showToast('使用中のユーザーは削除できません', 'error');
+                    showToast(I18n.t('settings.cantDelActive'), 'error');
                     return;
                 }
                 const user = await DB.getUser(userId);
-                if (!confirm(`${user.name} を削除しますか？\n学習履歴も全て削除されます。`)) return;
+                if (!confirm(I18n.t('settings.delUserConfirm', { name: user.name }))) return;
                 await DB.deleteUser(userId);
-                showToast('ユーザーを削除しました', 'success');
+                showToast(I18n.t('settings.delUserSuccess'), 'success');
                 loadUserList();
             });
         });
@@ -722,6 +793,10 @@ const App = (() => {
             }
         });
 
+        $('settings-lang')?.addEventListener('change', (e) => {
+            changeLanguage(e.target.value);
+        });
+
         // 新規ユーザー追加
         $('settings-add-user-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -731,13 +806,13 @@ const App = (() => {
             try {
                 await DB.createUser(name);
                 input.value = '';
-                showToast(`${name} を追加しました`, 'success');
+                showToast(I18n.t('settings.addUserSuccess', { name }), 'success');
                 loadUserList();
             } catch (err) {
                 if (err.name === 'ConstraintError') {
-                    showToast('その名前は既に使用されています', 'error');
+                    showToast(I18n.t('welcome.nameExists'), 'error');
                 } else {
-                    showToast('追加に失敗しました', 'error');
+                    showToast(I18n.t('welcome.addFail'), 'error');
                 }
             }
         });
@@ -753,11 +828,23 @@ const App = (() => {
         appSettings = await DB.getSettings(userId);
         if (!appSettings.userId) {
             appSettings.userId = userId;
-            await DB.saveSettings(appSettings);
         }
+        
+        // 言語設定の反映
+        if (appSettings.language) {
+            I18n.setLanguage(appSettings.language);
+            updateDOMTranslations();
+        } else {
+            appSettings.language = I18n.getLanguage(); // 最新状態をDBに
+        }
+        
+        await DB.saveSettings(appSettings);
 
         // ヘッダー更新
         updateUserDisplay();
+        
+        // 言語セレクトの同期
+        if ($('settings-lang')) $('settings-lang').value = I18n.getLanguage();
     }
 
     function updateUserDisplay() {
@@ -795,7 +882,7 @@ const App = (() => {
     function setupGlobalKeys() {
         document.addEventListener('keydown', (e) => {
             // テキスト入力中は無視
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
             switch (e.key) {
                 case 'Enter':
@@ -857,7 +944,7 @@ const App = (() => {
 
     function updateOctaveDisplay(octave) {
         const el = $('octave-indicator');
-        if (el) el.textContent = `Oct: ${octave}`;
+        if (el) el.textContent = I18n.t('common.octave', { n: octave });
     }
 
     function updateFooterHints() {
@@ -865,11 +952,11 @@ const App = (() => {
         if (!el) return;
 
         const hints = {
-            home: 'Enter: トレーニング開始 | A-J: 白鍵演奏 | Z/X: オクターブ上下',
-            training: 'Space/R: リプレイ | Esc: 中断 | A-J: 回答',
-            result: 'Enter: もう1セット | Esc: ホームに戻る',
-            history: 'Esc: 戻る',
-            settings: 'Esc: 戻る'
+            home: I18n.t('footer.shortcutsHome'),
+            training: I18n.t('footer.shortcutsTraining'),
+            result: I18n.t('footer.shortcutsResult'),
+            history: I18n.t('footer.shortcutsBack'),
+            settings: I18n.t('footer.shortcutsBack')
         };
 
         el.textContent = hints[currentScreen] || '';

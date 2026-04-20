@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absolute Pitch Trainer — 絶対音感トレーニング</title>
+    <title>Absolute Pitch Trainer</title>
     <meta name="description" content="ブラウザで使える絶対音感トレーニングアプリ。リアルなピアノ音で耳を鍛えましょう。">
 
     <!-- Google Fonts -->
@@ -23,7 +23,7 @@
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
             <div class="loading-logo">🎹</div>
-            <h1 class="loading-title">Absolute Pitch Trainer</h1>
+            <h1 class="loading-title" data-i18n="common.title">Absolute Pitch Trainer</h1>
             <div class="loading-spinner"></div>
         </div>
     </div>
@@ -32,7 +32,7 @@
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-overlay-content glass-panel">
             <div class="loading-spinner"></div>
-            <p id="loading-text">読み込み中...</p>
+            <p id="loading-text" data-i18n="common.loading">読み込み中...</p>
         </div>
     </div>
 
@@ -47,12 +47,12 @@
             <div class="header-left">
                 <h1 class="app-title">
                     <span class="title-icon">🎹</span>
-                    <span class="title-text">Absolute Pitch Trainer</span>
+                    <span class="title-text" data-i18n="common.title">Absolute Pitch Trainer</span>
                 </h1>
             </div>
             <div class="header-right">
                 <span id="octave-indicator" class="octave-indicator">Oct: 4</span>
-                <button id="btn-user-switch" class="user-btn" title="ユーザー切替">
+                <button id="btn-user-switch" class="user-btn" title="ユーザー切替" data-i18n-title="common.userSwitch">
                     <span class="user-btn-icon">👤</span>
                     <span id="current-user-name" class="user-btn-name">—</span>
                 </button>
@@ -62,14 +62,24 @@
         <!-- ====== ウェルカム画面 ====== -->
         <section id="screen-welcome" class="screen active">
             <div class="welcome-container">
+                <!-- 言語セレクタ -->
+                <div class="welcome-lang-selector glass-panel">
+                    <label for="welcome-lang" data-i18n="settings.langLabel">言語 (Language)</label>
+                    <select id="welcome-lang" class="lang-select">
+                        <option value="ja">日本語</option>
+                        <option value="en">English</option>
+                        <option value="zh-TW">繁體中文</option>
+                    </select>
+                </div>
+                
                 <div class="welcome-hero">
                     <div class="welcome-emoji">🎵</div>
-                    <h2>ようこそ</h2>
-                    <p class="welcome-sub">絶対音感トレーニングを始めましょう。<br>まずはお名前を入力してください。</p>
+                    <h2 data-i18n="welcome.title">ようこそ</h2>
+                    <p class="welcome-sub" data-i18n="welcome.desc">絶対音感トレーニングを始めましょう。<br>まずはニックネームなどを入力してデータを識別できるようにします。</p>
                 </div>
                 <form id="welcome-form" class="welcome-form glass-panel">
-                    <input id="welcome-name-input" type="text" placeholder="あなたの名前" maxlength="20" required autocomplete="off">
-                    <button type="submit" class="primary-btn">始める</button>
+                    <input id="welcome-name-input" type="text" placeholder="あなたの名前" data-i18n-placeholder="welcome.placeholder" maxlength="20" required autocomplete="off">
+                    <button type="submit" class="primary-btn" data-i18n="welcome.startBtn">始める</button>
                 </form>
             </div>
         </section>
@@ -77,46 +87,47 @@
         <!-- ====== ホーム画面 ====== -->
         <section id="screen-home" class="screen">
             <div class="home-container">
-                <p class="home-subtitle">耳を鍛え、世界を音で捉える。</p>
+                <p class="home-subtitle" data-i18n="home.subtitle">耳を鍛え、世界を音で捉える。</p>
 
                 <div class="home-controls glass-panel">
                     <div class="control-row">
                         <div class="control-group">
-                            <label for="home-level-select">🎯 レベル</label>
+                            <label for="home-level-select" data-i18n="home.level">🎯 レベル</label>
                             <select id="home-level-select">
-                                <option value="1">Level 1 — 1オクターブ (C4-B4)</option>
-                                <option value="2">Level 2 — 2オクターブ (C3-B4)</option>
-                                <option value="3">Level 3 — 4オクターブ (C2-B5)</option>
+                                <option value="1" data-i18n="home.level1">Level 1 — 1オクターブ (C4-B4)</option>
+                                <option value="2" data-i18n="home.level2">Level 2 — 2オクターブ (C3-B4)</option>
+                                <option value="3" data-i18n="home.level3">Level 3 — 4オクターブ (C2-B5)</option>
                             </select>
                         </div>
                         <div class="control-group">
-                            <label for="home-questions-select">📝 問題数</label>
+                            <label for="home-questions-select" data-i18n="home.questions">📝 問題数</label>
                             <select id="home-questions-select">
-                                <option value="5">5 問</option>
-                                <option value="10" selected>10 問</option>
-                                <option value="20">20 問</option>
+                                <option value="5" data-i18n="home.qCount" data-i18n-params='{"n":5}'>5 問</option>
+                                <option value="10" data-i18n="home.qCount" data-i18n-params='{"n":10}' selected>10 問</option>
+                                <option value="20" data-i18n="home.qCount" data-i18n-params='{"n":20}'>20 問</option>
                             </select>
                         </div>
                     </div>
 
                     <button id="btn-start-training" class="primary-btn large-btn pulse-btn">
-                        <span class="btn-icon">▶</span> トレーニング開始
+                        <span class="btn-icon">▶</span> <span data-i18n="home.startBtn">トレーニング開始</span>
                     </button>
                 </div>
 
                 <div class="home-nav">
                     <button id="btn-history" class="nav-btn glass-panel">
                         <span class="nav-icon">📊</span>
-                        <span class="nav-label">学習履歴</span>
+                        <span class="nav-label" data-i18n="home.historyBtn">学習履歴</span>
                     </button>
                     <button id="btn-settings" class="nav-btn glass-panel">
                         <span class="nav-icon">⚙️</span>
-                        <span class="nav-label">設定</span>
+                        <span class="nav-label" data-i18n="home.settingsBtn">設定</span>
                     </button>
                 </div>
 
-                <p class="home-hint">🎵 下のピアノ鍵盤は自由に演奏できます<br>
-                    <span class="hint-keys">キーボード: A S D F G H J（白鍵） / W E T Y U（黒鍵）</span>
+                <p class="home-hint">
+                    <span data-i18n="home.hintPiano">🎵 下のピアノ鍵盤は自由に演奏できます</span><br>
+                    <span class="hint-keys" data-i18n="home.hintKeys">キーボード: A S D F G H J（白鍵） / W E T Y U（黒鍵）</span>
                 </p>
             </div>
         </section>
@@ -125,7 +136,7 @@
         <section id="screen-training" class="screen">
             <div class="training-container">
                 <div class="training-header">
-                    <button id="btn-abort-training" class="abort-btn" title="トレーニングを中断 (Esc)">
+                    <button id="btn-abort-training" class="abort-btn" title="トレーニングを中断 (Esc)" data-i18n="training.abort">
                         ✕ 中断
                     </button>
 
@@ -142,21 +153,21 @@
 
                     <div class="training-stats">
                         <div class="stat-item">
-                            <span class="stat-label">正解</span>
+                            <span class="stat-label" data-i18n="training.score">正解</span>
                             <span id="training-score" class="stat-value">0</span>
                         </div>
                         <div id="training-streak-container" class="stat-item">
-                            <span class="stat-label">🔥 連続</span>
+                            <span class="stat-label" data-i18n="training.streak">🔥 連続</span>
                             <span id="training-streak" class="stat-value">0</span>
                         </div>
                     </div>
                 </div>
 
-                <div id="training-message" class="training-message">
+                <div id="training-message" class="training-message" data-i18n="training.ready">
                     準備中...
                 </div>
 
-                <button id="btn-replay" class="replay-btn glass-panel" title="もう一度聴く (Space / R)">
+                <button id="btn-replay" class="replay-btn glass-panel" title="もう一度聴く (Space / R)" data-i18n="training.replay">
                     🔊 もう一度聴く
                 </button>
             </div>
@@ -166,8 +177,8 @@
         <section id="screen-result" class="screen">
             <div class="result-container">
                 <div class="result-card glass-panel">
-                    <h2>トレーニング結果</h2>
-                    <span id="result-aborted-badge" class="aborted-badge hidden">中断</span>
+                    <h2 data-i18n="result.title">トレーニング結果</h2>
+                    <span id="result-aborted-badge" class="aborted-badge hidden" data-i18n="result.aborted">中断</span>
                     <span id="result-level" class="result-level-badge">Level 1</span>
 
                     <div id="result-grade" class="result-grade">🎉 すばらしい！</div>
@@ -176,20 +187,20 @@
                         <span id="result-score" class="result-score-value">0 / 0</span>
                     </div>
                     <div class="result-accuracy-display">
-                        正解率 <span id="result-accuracy" class="result-accuracy-value">0%</span>
+                        <span data-i18n="result.accuracy">正解率</span> <span id="result-accuracy" class="result-accuracy-value">0%</span>
                     </div>
                     <div class="result-streak-display">
-                        最大連続正解: <span id="result-max-streak">0</span>
+                        <span data-i18n="result.maxStreak">最大連続正解:</span> <span id="result-max-streak">0</span>
                     </div>
 
                     <div class="result-details">
-                        <h3>詳細</h3>
+                        <h3 data-i18n="result.details">詳細</h3>
                         <div id="result-details-list" class="result-details-list"></div>
                     </div>
 
                     <div class="result-actions">
-                        <button id="btn-retry" class="primary-btn">▶ もう1セット</button>
-                        <button id="btn-back-home" class="secondary-btn">🏠 ホームに戻る</button>
+                        <button id="btn-retry" class="primary-btn" data-i18n="result.retryBtn">▶ もう1セット</button>
+                        <button id="btn-back-home" class="secondary-btn" data-i18n="result.homeBtn">🏠 ホームに戻る</button>
                     </div>
                 </div>
             </div>
@@ -199,48 +210,48 @@
         <section id="screen-history" class="screen">
             <div class="history-container">
                 <div class="screen-header">
-                    <button id="btn-history-back" class="back-btn">← 戻る</button>
-                    <h2>📊 学習履歴</h2>
+                    <button id="btn-history-back" class="back-btn" data-i18n="common.back">← 戻る</button>
+                    <h2 data-i18n="history.title">📊 学習履歴</h2>
                 </div>
 
                 <div class="stats-summary">
                     <div class="stats-card glass-panel">
-                        <div class="stats-label">総セッション</div>
+                        <div class="stats-label" data-i18n="history.totalSessions">総セッション</div>
                         <div id="stats-total-sessions" class="stats-value">0</div>
                     </div>
                     <div class="stats-card glass-panel">
-                        <div class="stats-label">総問題数</div>
+                        <div class="stats-label" data-i18n="history.totalQuestions">総問題数</div>
                         <div id="stats-total-questions" class="stats-value">0</div>
                     </div>
                     <div class="stats-card glass-panel">
-                        <div class="stats-label">総合正解率</div>
+                        <div class="stats-label" data-i18n="history.overallAcc">総合正解率</div>
                         <div id="stats-overall-accuracy" class="stats-value accent">0%</div>
                     </div>
                 </div>
 
                 <div class="stats-level-breakdown">
-                    <h3>レベル別</h3>
+                    <h3 data-i18n="history.byLevel">レベル別</h3>
                     <div id="stats-by-level" class="stats-level-cards"></div>
                 </div>
 
                 <div class="trend-section glass-panel">
-                    <h3>正解率の推移</h3>
+                    <h3 data-i18n="history.trend">正解率の推移</h3>
                     <canvas id="trend-chart"></canvas>
                 </div>
 
                 <div class="history-list-section">
                     <div class="history-list-header">
                         <div class="history-list-title-area">
-                            <h3>セッション一覧</h3>
+                            <h3 data-i18n="history.sessionList">セッション一覧</h3>
                         </div>
                         <div class="history-list-actions">
                             <label class="history-select-all-label">
-                                <input type="checkbox" id="history-select-all"> 全選択
+                                <input type="checkbox" id="history-select-all"> <span data-i18n="history.selectAll">全選択</span>
                             </label>
                             <span id="history-selection-count" class="history-selection-count hidden">0件選択</span>
-                            <button id="btn-download-selected" class="action-btn-small" title="選択したセッションをダウンロード" disabled>📥</button>
-                            <button id="btn-delete-selected" class="danger-btn-small" title="選択したセッションを削除" disabled>🗑</button>
-                            <button id="btn-clear-history" class="danger-btn-small" title="全データの一括消去">全消去</button>
+                            <button id="btn-download-selected" class="action-btn-small" title="選択したセッションをダウンロード" data-i18n-title="history.dlBtnTitle" disabled>📥</button>
+                            <button id="btn-delete-selected" class="danger-btn-small" title="選択したセッションを削除" data-i18n-title="history.delBtnTitle" disabled>🗑</button>
+                            <button id="btn-clear-history" class="danger-btn-small" title="全データの一括消去" data-i18n-title="history.clearBtnTitle" data-i18n="history.clearBtn">全消去</button>
                         </div>
                     </div>
                     <div id="history-session-list" class="history-list"></div>
@@ -252,44 +263,54 @@
         <section id="screen-settings" class="screen">
             <div class="settings-container">
                 <div class="screen-header">
-                    <button id="btn-settings-back" class="back-btn">← 戻る</button>
-                    <h2>⚙️ 設定</h2>
+                    <button id="btn-settings-back" class="back-btn" data-i18n="common.back">← 戻る</button>
+                    <h2 data-i18n="settings.title">⚙️ 設定</h2>
                 </div>
 
                 <div class="settings-section glass-panel">
-                    <h3>トレーニング設定</h3>
+                    <h3 data-i18n="settings.trainingGroup">トレーニング設定</h3>
+
+                    <!-- 言語設定 -->
+                    <div class="settings-row">
+                        <label for="settings-lang" data-i18n="settings.langLabel">言語 (Language)</label>
+                        <select id="settings-lang" class="lang-select">
+                            <option value="ja">日本語</option>
+                            <option value="en">English</option>
+                            <option value="zh-TW">繁體中文</option>
+                        </select>
+                    </div>
 
                     <div class="settings-row">
-                        <label for="settings-level">デフォルトレベル</label>
+                        <label for="settings-level" data-i18n="settings.defLevel">デフォルトレベル</label>
                         <select id="settings-level">
-                            <option value="1">Level 1 — 1オクターブ</option>
-                            <option value="2">Level 2 — 2オクターブ</option>
-                            <option value="3">Level 3 — 4オクターブ</option>
+                            <option value="1" data-i18n="home.level1">Level 1 — 1オクターブ</option>
+                            <option value="2" data-i18n="home.level2">Level 2 — 2オクターブ</option>
+                            <option value="3" data-i18n="home.level3">Level 3 — 4オクターブ</option>
                         </select>
                     </div>
 
                     <div class="settings-row">
-                        <label for="settings-questions">デフォルト問題数</label>
+                        <label for="settings-questions" data-i18n="settings.defQuestions">デフォルト問題数</label>
                         <select id="settings-questions">
-                            <option value="5">5 問</option>
-                            <option value="10">10 問</option>
-                            <option value="20">20 問</option>
+                            <option value="5" data-i18n="home.qCount" data-i18n-params='{"n":5}'>5 問</option>
+                            <option value="10" data-i18n="home.qCount" data-i18n-params='{"n":10}'>10 問</option>
+                            <option value="20" data-i18n="home.qCount" data-i18n-params='{"n":20}'>20 問</option>
                         </select>
                     </div>
 
                     <div class="settings-row">
-                        <label for="settings-labels">鍵盤ラベル表示</label>
+                        <label for="settings-labels" data-i18n="settings.showLabels">鍵盤ラベル表示</label>
                         <input type="checkbox" id="settings-labels" checked>
                     </div>
                 </div>
 
                 <div class="settings-section glass-panel">
-                    <h3>👤 ユーザー管理</h3>
+                    <h3 data-i18n="settings.userGroup">👤 ユーザー管理</h3>
                     <div id="user-list" class="user-list"></div>
 
                     <form id="settings-add-user-form" class="add-user-form">
-                        <input id="settings-new-user-name" type="text" placeholder="新しいユーザー名" maxlength="20" required autocomplete="off">
-                        <button type="submit" class="secondary-btn">追加</button>
+                        <input id="settings-new-user-name" type="text" placeholder="新しいユーザー名" data-i18n-placeholder="settings.newUserPlaceholder" maxlength="20" required autocomplete="off">
+                        <button type="submit" class="secondary-btn" data-i18n="settings.addBtn">追加</button>
                     </form>
                 </div>
             </div>
@@ -303,11 +324,12 @@
         <!-- フッター -->
         <footer class="app-footer">
             <p id="footer-shortcuts" class="footer-shortcuts"></p>
-            <p class="footer-credit">Audio engine: Tone.js | Piano samples: Salamander Grand Piano</p>
+            <p class="footer-credit" data-i18n="footer.credit">Audio engine: Tone.js | Piano samples: Salamander Grand Piano</p>
         </footer>
     </div>
 
     <!-- Scripts (順序重要: 依存関係順) -->
+    <script src="js/i18n.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/db.js"></script>
     <script src="js/piano.js"></script>
