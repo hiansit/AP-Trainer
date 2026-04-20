@@ -18,11 +18,15 @@ const Piano = (() => {
      * レベルに応じた音域を返す
      */
     function getRangeForLevel(level) {
-        switch (level) {
-            case 1: return { start: 4, end: 4 };   // 1オクターブ (C4-B4)
-            case 2: return { start: 3, end: 4 };   // 2オクターブ (C3-B4)
-            case 3: return { start: 2, end: 5 };   // 4オクターブ (C2-B5)
-            default: return { start: 4, end: 4 };
+        // levelは1〜6。1,3,5は白鍵のみ。2,4,6は黒鍵含む（クロマチック）
+        switch (Number(level)) {
+            case 1: return { start: 4, end: 4, whiteOnly: true };   // 1オクターブ (C4-B4) 白鍵のみ
+            case 2: return { start: 4, end: 4, whiteOnly: false };  // 1オクターブ (C4-B4) 黒鍵含む
+            case 3: return { start: 3, end: 4, whiteOnly: true };   // 2オクターブ (C3-B4) 白鍵のみ
+            case 4: return { start: 3, end: 4, whiteOnly: false };  // 2オクターブ (C3-B4) 黒鍵含む
+            case 5: return { start: 2, end: 5, whiteOnly: true };   // 4オクターブ (C2-B5) 白鍵のみ
+            case 6: return { start: 2, end: 5, whiteOnly: false };  // 4オクターブ (C2-B5) 黒鍵含む
+            default: return { start: 4, end: 4, whiteOnly: false };
         }
     }
 

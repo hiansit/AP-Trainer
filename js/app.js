@@ -430,7 +430,19 @@ const App = (() => {
         const stats = await DB.getUserStats(currentUser.id);
         const sessions = await DB.getSessionsByUser(currentUser.id, 9999);
 
-        updateHistoryActionUI(sessions.length);
+        // --- フィルター処理 ---
+        let filteredSessions = sessions;
+        const levelFilter = $('history-level-filter')?.value || 'all';
+        const qFilter = $('history-questions-filter')?.value || 'all';
+
+        if (levelFilter !== 'all') {
+            filteredSessions = filteredSessions.filter(s => String(s.level) === levelFilter);
+        }
+        if (qFilter !== 'all') {
+            filteredSessions = filteredSessions.filter(s => String(s.total) === qFilter);
+        }
+
+        updateHistoryActionUI(filteredSessions.length);
 
         // 統計サマリー
         $('stats-total-sessions').textContent = stats.totalSessions;
@@ -456,17 +468,18 @@ const App = (() => {
             });
         }
 
-        // 推移グラフ描画
-        renderTrendChart(stats.recentTrend);
+        // 推移グラフ描画 (フィルタ適用済みの最新10件を古い順にして渡す)
+        const trendData = [...filteredSessions].slice(0, 10).reverse();
+        renderTrendChart(trendData);
 
         // セッション一覧
         const listEl = $('history-session-list');
         if (listEl) {
             listEl.innerHTML = '';
-            if (sessions.length === 0) {
+            if (filteredSessions.length === 0) {
                 listEl.innerHTML = `<p class="empty-message">${I18n.t('history.emptyRecord')}</p>`;
             } else {
-                sessions.forEach(s => {
+                filteredSessions.forEach(s => {
                     const date = new Date(s.timestamp);
                     const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
                     const row = document.createElement('div');
@@ -497,7 +510,7 @@ const App = (() => {
                     cb.addEventListener('change', (e) => {
                         if (e.target.checked) selectedHistoryIds.add(s.id);
                         else selectedHistoryIds.delete(s.id);
-                        updateHistoryActionUI(sessions.length);
+                        updateHistoryActionUI(filteredSessions.length);
                     });
 
                     row.querySelector('.btn-dl-single').addEventListener('click', () => {
@@ -628,6 +641,10 @@ const App = (() => {
 
     function setupHistory() {
         $('btn-history-back')?.addEventListener('click', () => showScreen('home'));
+
+        // フィルターイベント
+        $('history-level-filter')?.addEventListener('change', () => initHistoryScreen());
+        $('history-questions-filter')?.addEventListener('change', () => initHistoryScreen());
 
         $('btn-clear-history')?.addEventListener('click', async () => {
             if (!currentUser) return;

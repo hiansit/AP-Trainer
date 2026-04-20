@@ -73,8 +73,9 @@ const Training = (() => {
         // ランダムな音を生成
         const range = Piano.getRangeForLevel(state.level);
         const octave = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
-        const noteIndex = Math.floor(Math.random() * NOTES.length);
-        state.targetNote = `${NOTES[noteIndex]}${octave}`;
+        const notesToUse = range.whiteOnly ? Piano.WHITE_NOTES : Piano.NOTES;
+        const noteIndex = Math.floor(Math.random() * notesToUse.length);
+        state.targetNote = `${notesToUse[noteIndex]}${octave}`;
 
         if (callbacks.onQuestionStart) {
             callbacks.onQuestionStart(state.currentQuestion, state.questionsPerSet);
