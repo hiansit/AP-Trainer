@@ -53,8 +53,10 @@ const App = (() => {
         // セレクトボックスの同期
         const welSel = $('welcome-lang');
         const setSel = $('settings-lang');
+        const headSel = $('header-lang');
         if (welSel) welSel.value = lang;
         if (setSel) setSel.value = lang;
+        if (headSel) headSel.value = lang;
 
         updateDOMTranslations();
 
@@ -69,6 +71,7 @@ const App = (() => {
         const browserLang = I18n.detectBrowserLanguage();
         I18n.setLanguage(browserLang);
         if ($('welcome-lang')) $('welcome-lang').value = browserLang;
+        if ($('header-lang')) $('header-lang').value = browserLang;
         updateDOMTranslations();
 
         // DB初期化
@@ -845,6 +848,7 @@ const App = (() => {
         
         // 言語セレクトの同期
         if ($('settings-lang')) $('settings-lang').value = I18n.getLanguage();
+        if ($('header-lang')) $('header-lang').value = I18n.getLanguage();
     }
 
     function updateUserDisplay() {
@@ -965,6 +969,10 @@ const App = (() => {
     // ==================== 起動 ====================
 
     function boot() {
+        $('header-lang')?.addEventListener('change', (e) => {
+            changeLanguage(e.target.value);
+        });
+
         // 各画面のイベントリスナーをセットアップ
         setupWelcome();
         setupHome();
