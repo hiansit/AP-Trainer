@@ -1435,7 +1435,7 @@ select option {
     border-radius: var(--radius-lg);
     border: 1px solid var(--glass-border);
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 220px;
 
     /* スクロールバーカスタマイズ */
@@ -1457,6 +1457,7 @@ select option {
     position: relative;
     height: 200px;
     user-select: none;
+    margin: 0 auto;
 }
 
 .octave-group {
