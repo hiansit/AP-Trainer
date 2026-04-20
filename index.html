@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absolute Pitch Trainer — 絶対音感トレーニング</title>
+    <meta name="description" content="ブラウザで使える絶対音感トレーニングアプリ。リアルなピアノ音で耳を鍛えましょう。">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ========== ローディング画面 ========== -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">🎹</div>
+            <h1 class="loading-title">Absolute Pitch Trainer</h1>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- ========== ローディングオーバーレイ（サンプル読み込み用） ========== -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-overlay-content glass-panel">
+            <div class="loading-spinner"></div>
+            <p id="loading-text">読み込み中...</p>
+        </div>
+    </div>
+
+    <!-- ========== トースト通知 ========== -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- ========== メインアプリ ========== -->
+    <div class="app-container">
+
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">
+                    <span class="title-icon">🎹</span>
+                    <span class="title-text">Absolute Pitch Trainer</span>
+                </h1>
+            </div>
+            <div class="header-right">
+                <span id="octave-indicator" class="octave-indicator">Oct: 4</span>
+                <button id="btn-user-switch" class="user-btn" title="ユーザー切替">
+                    <span class="user-btn-icon">👤</span>
+                    <span id="current-user-name" class="user-btn-name">—</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ====== ウェルカム画面 ====== -->
+        <section id="screen-welcome" class="screen active">
+            <div class="welcome-container">
+                <div class="welcome-hero">
+                    <div class="welcome-emoji">🎵</div>
+                    <h2>ようこそ</h2>
+                    <p class="welcome-sub">絶対音感トレーニングを始めましょう。<br>まずはお名前を入力してください。</p>
+                </div>
+                <form id="welcome-form" class="welcome-form glass-panel">
+                    <input id="welcome-name-input" type="text" placeholder="あなたの名前" maxlength="20" required autocomplete="off">
+                    <button type="submit" class="primary-btn">始める</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ====== ホーム画面 ====== -->
+        <section id="screen-home" class="screen">
+            <div class="home-container">
+                <p class="home-subtitle">耳を鍛え、世界を音で捉える。</p>
+
+                <div class="home-controls glass-panel">
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="home-level-select">🎯 レベル</label>
+                            <select id="home-level-select">
+                                <option value="1">Level 1 — 1オクターブ (C4-B4)</option>
+                                <option value="2">Level 2 — 2オクターブ (C3-B4)</option>
+                                <option value="3">Level 3 — 4オクターブ (C2-B5)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="home-questions-select">📝 問題数</label>
+                            <select id="home-questions-select">
+                                <option value="5">5 問</option>
+                                <option value="10" selected>10 問</option>
+                                <option value="20">20 問</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="btn-start-training" class="primary-btn large-btn pulse-btn">
+                        <span class="btn-icon">▶</span> トレーニング開始
+                    </button>
+                </div>
+
+                <div class="home-nav">
+                    <button id="btn-history" class="nav-btn glass-panel">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">学習履歴</span>
+                    </button>
+                    <button id="btn-settings" class="nav-btn glass-panel">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-label">設定</span>
+                    </button>
+                </div>
+
+                <p class="home-hint">🎵 下のピアノ鍵盤は自由に演奏できます<br>
+                    <span class="hint-keys">キーボード: A S D F G H J（白鍵） / W E T Y U（黒鍵）</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- ====== トレーニング画面 ====== -->
+        <section id="screen-training" class="screen">
+            <div class="training-container">
+                <div class="training-header">
+                    <button id="btn-abort-training" class="abort-btn" title="トレーニングを中断 (Esc)">
+                        ✕ 中断
+                    </button>
+
+                    <div class="training-progress">
+                        <div class="progress-text">
+                            <span id="training-current">0</span>
+                            <span class="progress-sep">/</span>
+                            <span id="training-total">10</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="training-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="training-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">正解</span>
+                            <span id="training-score" class="stat-value">0</span>
+                        </div>
+                        <div id="training-streak-container" class="stat-item">
+                            <span class="stat-label">🔥 連続</span>
+                            <span id="training-streak" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="training-message" class="training-message">
+                    準備中...
+                </div>
+
+                <button id="btn-replay" class="replay-btn glass-panel" title="もう一度聴く (Space / R)">
+                    🔊 もう一度聴く
+                </button>
+            </div>
+        </section>
+
+        <!-- ====== 結果画面 ====== -->
+        <section id="screen-result" class="screen">
+            <div class="result-container">
+                <div class="result-card glass-panel">
+                    <h2>トレーニング結果</h2>
+                    <span id="result-aborted-badge" class="aborted-badge hidden">中断</span>
+                    <span id="result-level" class="result-level-badge">Level 1</span>
+
+                    <div id="result-grade" class="result-grade">🎉 すばらしい！</div>
+
+                    <div class="result-score-display">
+                        <span id="result-score" class="result-score-value">0 / 0</span>
+                    </div>
+                    <div class="result-accuracy-display">
+                        正解率 <span id="result-accuracy" class="result-accuracy-value">0%</span>
+                    </div>
+                    <div class="result-streak-display">
+                        最大連続正解: <span id="result-max-streak">0</span>
+                    </div>
+
+                    <div class="result-details">
+                        <h3>詳細</h3>
+                        <div id="result-details-list" class="result-details-list"></div>
+                    </div>
+
+                    <div class="result-actions">
+                        <button id="btn-retry" class="primary-btn">▶ もう1セット</button>
+                        <button id="btn-back-home" class="secondary-btn">🏠 ホームに戻る</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== 履歴画面 ====== -->
+        <section id="screen-history" class="screen">
+            <div class="history-container">
+                <div class="screen-header">
+                    <button id="btn-history-back" class="back-btn">← 戻る</button>
+                    <h2>📊 学習履歴</h2>
+                </div>
+
+                <div class="stats-summary">
+                    <div class="stats-card glass-panel">
+                        <div class="stats-label">総セッション</div>
+                        <div id="stats-total-sessions" class="stats-value">0</div>
+                    </div>
+                    <div class="stats-card glass-panel">
+                        <div class="stats-label">総問題数</div>
+                        <div id="stats-total-questions" class="stats-value">0</div>
+                    </div>
+                    <div class="stats-card glass-panel">
+                        <div class="stats-label">総合正解率</div>
+                        <div id="stats-overall-accuracy" class="stats-value accent">0%</div>
+                    </div>
+                </div>
+
+                <div class="stats-level-breakdown">
+                    <h3>レベル別</h3>
+                    <div id="stats-by-level" class="stats-level-cards"></div>
+                </div>
+
+                <div class="trend-section glass-panel">
+                    <h3>正解率の推移</h3>
+                    <canvas id="trend-chart"></canvas>
+                </div>
+
+                <div class="history-list-section">
+                    <div class="history-list-header">
+                        <div class="history-list-title-area">
+                            <h3>セッション一覧</h3>
+                        </div>
+                        <div class="history-list-actions">
+                            <label class="history-select-all-label">
+                                <input type="checkbox" id="history-select-all"> 全選択
+                            </label>
+                            <span id="history-selection-count" class="history-selection-count hidden">0件選択</span>
+                            <button id="btn-download-selected" class="action-btn-small" title="選択したセッションをダウンロード" disabled>📥</button>
+                            <button id="btn-delete-selected" class="danger-btn-small" title="選択したセッションを削除" disabled>🗑</button>
+                            <button id="btn-clear-history" class="danger-btn-small" title="全データの一括消去">全消去</button>
+                        </div>
+                    </div>
+                    <div id="history-session-list" class="history-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== 設定画面 ====== -->
+        <section id="screen-settings" class="screen">
+            <div class="settings-container">
+                <div class="screen-header">
+                    <button id="btn-settings-back" class="back-btn">← 戻る</button>
+                    <h2>⚙️ 設定</h2>
+                </div>
+
+                <div class="settings-section glass-panel">
+                    <h3>トレーニング設定</h3>
+
+                    <div class="settings-row">
+                        <label for="settings-level">デフォルトレベル</label>
+                        <select id="settings-level">
+                            <option value="1">Level 1 — 1オクターブ</option>
+                            <option value="2">Level 2 — 2オクターブ</option>
+                            <option value="3">Level 3 — 4オクターブ</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-row">
+                        <label for="settings-questions">デフォルト問題数</label>
+                        <select id="settings-questions">
+                            <option value="5">5 問</option>
+                            <option value="10">10 問</option>
+                            <option value="20">20 問</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-row">
+                        <label for="settings-labels">鍵盤ラベル表示</label>
+                        <input type="checkbox" id="settings-labels" checked>
+                    </div>
+                </div>
+
+                <div class="settings-section glass-panel">
+                    <h3>👤 ユーザー管理</h3>
+                    <div id="user-list" class="user-list"></div>
+
+                    <form id="settings-add-user-form" class="add-user-form">
+                        <input id="settings-new-user-name" type="text" placeholder="新しいユーザー名" maxlength="20" required autocomplete="off">
+                        <button type="submit" class="secondary-btn">追加</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== ピアノセクション（ホームとトレーニングで共有） ====== -->
+        <section id="piano-section" class="piano-section">
+            <div id="piano-container" class="piano-container"></div>
+        </section>
+
+        <!-- フッター -->
+        <footer class="app-footer">
+            <p id="footer-shortcuts" class="footer-shortcuts"></p>
+            <p class="footer-credit">Audio engine: Tone.js | Piano samples: Salamander Grand Piano</p>
+        </footer>
+    </div>
+
+    <!-- Scripts (順序重要: 依存関係順) -->
+    <script src="js/audio.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/piano.js"></script>
+    <script src="js/keyboard.js"></script>
+    <script src="js/training.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
