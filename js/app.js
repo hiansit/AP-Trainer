@@ -682,6 +682,58 @@ const App = (() => {
             showToast(I18n.t('history.delMultiSuccess'), 'success');
             initHistoryScreen();
         });
+
+        const importBtn = $('btn-import-history');
+        const importFile = $('import-json-file');
+        if (importBtn && importFile) {
+            importBtn.addEventListener('click', () => {
+                importFile.click();
+            });
+
+            importFile.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    try {
+                        const importedSessions = JSON.parse(evt.target.result);
+                        if (!Array.isArray(importedSessions)) throw new Error('Invalid JSON format');
+
+                        // 重複チェックのために現在のDBからタイムスタンプを全て取得
+                        const existingSessions = await DB.getSessionsByUser(currentUser.id, 99999);
+                        const existingTimestamps = new Set(existingSessions.map(s => s.timestamp));
+
+                        let addedCount = 0;
+
+                        // ひとつずつ保存
+                        for (const session of importedSessions) {
+                            if (!existingTimestamps.has(session.timestamp)) {
+                                session.userId = currentUser.id; // 現在のユーザーに紐付け直す
+                                await DB.importSession(session);
+                                addedCount++;
+                            }
+                        }
+
+                        if (addedCount > 0) {
+                            showToast(I18n.t('history.importSuccess', { n: addedCount }), 'success');
+                        } else {
+                            showToast(I18n.t('history.importNoNew'), 'info');
+                        }
+
+                        initHistoryScreen();
+
+                    } catch (err) {
+                        console.error('Import error:', err);
+                        showToast(I18n.t('history.importError'), 'error');
+                    }
+                    
+                    // 次回も同じファイルを選べるようにリセット
+                    importFile.value = '';
+                };
+                reader.readAsText(file);
+            });
+        }
     }
 
     // UI状態更新とJSONエクスポートのヘルパー

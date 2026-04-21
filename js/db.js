@@ -171,6 +171,24 @@ const DB = (() => {
     }
 
     /**
+     * 過去のセッションをインポート（タイムスタンプ維持・新規ID割当）
+     * @param {Object} session
+     * @returns {Promise<number>}
+     */
+    async function importSession(session) {
+        const database = await open();
+        return new Promise((resolve, reject) => {
+            const tx = database.transaction("sessions", "readwrite");
+            const store = tx.objectStore("sessions");
+            // idを削除してDBのAuto-incrementに任せる
+            delete session.id;
+            const req = store.add(session);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    /**
      * ユーザーのセッション履歴を取得（新しい順）
      * @param {number} userId
      * @param {number} limit - 最大件数（デフォルト50）
@@ -371,6 +389,7 @@ const DB = (() => {
         deleteUser,
         touchUser,
         saveSession,
+        importSession,
         getSessionsByUser,
         getUserStats,
         deleteSessionsByUser,

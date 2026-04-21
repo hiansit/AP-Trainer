@@ -279,6 +279,8 @@
                                 <input type="checkbox" id="history-select-all"> <span data-i18n="history.selectAll">全選択</span>
                             </label>
                             <span id="history-selection-count" class="history-selection-count hidden">0件選択</span>
+                            <button id="btn-import-history" class="action-btn-small" title="学習履歴の取り込み" data-i18n-title="history.importBtnTitle">📤</button>
+                            <input type="file" id="import-json-file" accept=".json" style="display:none;" />
                             <button id="btn-download-selected" class="action-btn-small" title="選択したセッションをダウンロード" data-i18n-title="history.dlBtnTitle" disabled>📥</button>
                             <button id="btn-delete-selected" class="danger-btn-small" title="選択したセッションを削除" data-i18n-title="history.delBtnTitle" disabled>🗑</button>
                             <button id="btn-clear-history" class="danger-btn-small" title="全データの一括消去" data-i18n-title="history.clearBtnTitle" data-i18n="history.clearBtn">全消去</button>

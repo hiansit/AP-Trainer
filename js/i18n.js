@@ -97,7 +97,11 @@ const i18nData = {
             delAllConfirm: "全ての学習履歴を削除しますか？",
             delAllSuccess: "履歴を削除しました",
             delMultiConfirm: "選択した {n} 件のセッションを削除しますか？",
-            delMultiSuccess: "選択したセッションを削除しました"
+            delMultiSuccess: "選択したセッションを削除しました",
+            importBtnTitle: "学習履歴ファイルの取り込み (JSON)",
+            importSuccess: "{n} 件の新しいセッションを取り込みました",
+            importNoNew: "新しいセッションはありませんでした（すべて重複です）",
+            importError: "ファイルの読み込みに失敗しました"
         },
         settings: {
             title: "⚙️ 設定",
@@ -224,7 +228,11 @@ const i18nData = {
             delAllConfirm: "Delete ALL training history?",
             delAllSuccess: "History deleted.",
             delMultiConfirm: "Delete {n} selected sessions?",
-            delMultiSuccess: "Selected sessions deleted."
+            delMultiSuccess: "Selected sessions deleted.",
+            importBtnTitle: "Import training history (JSON)",
+            importSuccess: "Imported {n} new session(s).",
+            importNoNew: "No new sessions found (all duplicates).",
+            importError: "Failed to read the file."
         },
         settings: {
             title: "⚙️ Settings",
@@ -351,7 +359,11 @@ const i18nData = {
             delAllConfirm: "確定要清除所有的學習紀錄嗎？",
             delAllSuccess: "紀錄已清除",
             delMultiConfirm: "確定要刪除選取的 {n} 筆紀錄嗎？",
-            delMultiSuccess: "已刪除選取的紀錄"
+            delMultiSuccess: "已刪除選取的紀錄",
+            importBtnTitle: "匯入學習紀錄檔案 (JSON)",
+            importSuccess: "成功匯入了 {n} 筆新紀錄",
+            importNoNew: "沒有發現新紀錄（皆為重複資料）",
+            importError: "讀取檔案失敗"
         },
         settings: {
             title: "⚙️ 設定",
